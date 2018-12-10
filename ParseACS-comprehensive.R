@@ -10,10 +10,7 @@
 #   --Comment out calls for any data files you do not wish to use, and edit the final cbind.fill() arguments accordingly. 
 #      Right now, many calls are commented out to avoid bad comparisons later with voter registration, which separates out Hispanics from all racial groups.
 
-# OTHER NOTES
 # "C" is sometimes included at the end of headers to mark columns as Census data (helps differentiate later from voter registration)
-# "Vert" or "vertical" refers to the "vertical" version of functions where the year of the data is not being put into the headers but rather into a column at the beginning of the file 
-# Working on horizontal version where year goes into headers, since that seems to be useful in some cases
 
 # EDIT HERE: Insert the path to the folder of files you are working with
 setwd("/Users/HannahKnowles/Documents/Florida Coding/2012-16 ACS 5YR hisp and nonhispanic race data")
