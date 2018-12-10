@@ -8,7 +8,7 @@
 #   --the year in the names of your data files
 #   --the year in the name of the output CSV, if you're running the code for multiple years
 #   --Comment out calls for any data files you do not wish to use, and edit the final cbind.fill() arguments accordingly. 
-#      Right now, many calls are commented out to avoid bad comparisons later with voter registration, which separates out Hispanics from all racial groups.
+#      Right now, many calls are commented out to avoid bad comparisons later with voter registration, which unlike much of the ACS data separates out Hispanics from all racial groups.
 
 # "C" is sometimes included at the end of headers to mark columns as Census data (helps differentiate later from voter registration)
 
