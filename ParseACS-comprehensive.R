@@ -1,0 +1,223 @@
+
+# This code gathers many variables from the Census Bureau's American Community Survey (ACS) data, including counts for each race, race x age and sex, race x citizenship, Hispanic/Latino origin, and race x per capita income. 
+# You can use the code on any geography -- ex, all counties in Florida, all states in the U.S., all Congressional districts in California, etc. 
+
+# EDITING INSTRUCTIONS: You'll want to edit:
+#   --the filepath for your data
+#   --the year of the data
+#   --the year in the names of your data files
+#   --the year in the name of the output CSV, if you're running the code for multiple years
+#   --Comment out calls for any data files you do not wish to use, and edit the final cbind.fill() arguments accordingly. 
+#      Right now, many calls are commented out to avoid bad comparisons later with voter registration, which separates out Hispanics from all racial groups.
+
+# OTHER NOTES
+# "C" is sometimes included at the end of headers to mark columns as Census data (helps differentiate later from voter registration)
+# "Vert" or "vertical" refers to the "vertical" version of functions where the year of the data is not being put into the headers but rather into a column at the beginning of the file 
+# Working on horizontal version where year goes into headers, since that seems to be useful in some cases
+
+# EDIT HERE: Insert the path to the folder of files you are working with
+setwd("/Users/HannahKnowles/Documents/Florida Coding/2012-16 ACS 5YR hisp and nonhispanic race data")
+
+# EDIT HERE: Change this to the year of files you are working with
+yr <- 2016 
+
+# EDIT HERE: Make sure your file names match (change the year), and comment out files you don't wish to use.
+
+origin <- read.csv("ACS_16_5YR_B03001_with_ann.csv", stringsAsFactors = FALSE)
+race <- read.csv("ACS_16_5YR_B03002_with_ann.csv", stringsAsFactors = FALSE)
+
+pci.all <- read.csv("ACS_16_5YR_B19301_with_ann.csv", stringsAsFactors = FALSE)
+#pci.black <- read.csv("ACS_16_5YR_B19301B_with_ann.csv", stringsAsFactors = FALSE)
+#pci.amind <- read.csv("ACS_16_5YR_B19301C_with_ann.csv", stringsAsFactors = FALSE)
+#pci.asian <- read.csv("ACS_16_5YR_B19301D_with_ann.csv", stringsAsFactors = FALSE)
+#pci.nhpi <- read.csv("ACS_16_5YR_B19301E_with_ann.csv", stringsAsFactors = FALSE)
+#pci.other <- read.csv("ACS_16_5YR_B19301F_with_ann.csv", stringsAsFactors = FALSE)
+#pci.two_plus <- read.csv("ACS_16_5YR_B19301G_with_ann.csv", stringsAsFactors = FALSE)
+pci.white_nonhis <- read.csv("ACS_16_5YR_B19301H_with_ann.csv", stringsAsFactors = FALSE)
+pci.hispanic <-  read.csv("ACS_16_5YR_B19301I_with_ann.csv", stringsAsFactors = FALSE)
+
+age.all <- read.csv("ACS_16_5YR_B01001_with_ann.csv", stringsAsFactors = FALSE)
+#age.black <- read.csv("ACS_16_5YR_B01001B_with_ann.csv", stringsAsFactors = FALSE)
+#age.amind <- read.csv("ACS_16_5YR_B01001C_with_ann.csv", stringsAsFactors = FALSE)
+#age.asian <- read.csv("ACS_16_5YR_B01001D_with_ann.csv", stringsAsFactors = FALSE)
+#age.nhpi <- read.csv("ACS_16_5YR_B01001E_with_ann.csv", stringsAsFactors = FALSE)
+#age.other <- read.csv("ACS_16_5YR_B01001F_with_ann.csv", stringsAsFactors = FALSE)
+#age.two_plus <- read.csv("ACS_16_5YR_B01001G_with_ann.csv", stringsAsFactors = FALSE)
+age.white_nonhis <- read.csv("ACS_16_5YR_B01001H_with_ann.csv", stringsAsFactors = FALSE)
+age.hispanic <-  read.csv("ACS_16_5YR_B01001I_with_ann.csv", stringsAsFactors = FALSE)
+
+citizen.all <- read.csv("ACS_16_5YR_B05003_with_ann.csv", stringsAsFactors = FALSE)
+#citizen.black <- read.csv("ACS_16_5YR_B05003B_with_ann.csv", stringsAsFactors = FALSE)
+#citizen.amind <- read.csv("ACS_16_5YR_B05003C_with_ann.csv", stringsAsFactors = FALSE)
+#citizen.asian <- read.csv("ACS_16_5YR_B05003D_with_ann.csv", stringsAsFactors = FALSE)
+#citizen.nhpi <- read.csv("ACS_16_5YR_B05003E_with_ann.csv", stringsAsFactors = FALSE)
+#citizen.other <- read.csv("ACS_16_5YR_B05003F_with_ann.csv", stringsAsFactors = FALSE)
+#citizen.two_plus <- read.csv("ACS_16_5YR_B05003G_with_ann.csv", stringsAsFactors = FALSE)
+citizen.white_nonhis <- read.csv("ACS_16_5YR_B05003H_with_ann.csv", stringsAsFactors = FALSE)
+citizen.hispanic <- read.csv("ACS_16_5YR_B05003I_with_ann.csv", stringsAsFactors = FALSE)
+
+# Create the start of your final file with the geographies you're interested in and the year
+geography <- data.frame(origin$GEO.display.label)
+geography$year <- yr
+
+#Removes extraneous information and edits headers in the file for Hispanic/Latino identification by race
+parse.race.vert <- function(data) {
+  data <- data[,-c(1:3,6:7,22:25,28:45)]
+  data$HD01_VD01[1] <- "Total Population C"
+  data$HD02_VD01[1] <- "Total Population Error C"
+  data$HD01_VD03[1] <- "White Non-Hispanic C"
+  data$HD02_VD03[1] <- "White Non-Hispanic Error C"
+  data$HD01_VD04[1] <- "Black Non-Hispanic C"
+  data$HD02_VD04[1] <- "Black Non-Hispanic Error C"
+  data$HD01_VD05[1] <- "AmInd Non-Hispanic C"
+  data$HD02_VD05[1] <- "AmInd Non-Hispanic Error C"
+  data$HD01_VD06[1] <- "Asian Non-Hispanic C"
+  data$HD02_VD06[1] <- "Asian Non-Hispanic Error C"
+  data$HD01_VD07[1] <- "NHPI Non-Hispanic C"
+  data$HD02_VD07[1] <- "NHPI Non-Hispanic Error C"
+  data$HD01_VD08[1] <- "Other Race Non-Hispanic C"
+  data$HD02_VD08[1] <- "Other Race Non-Hispanic Error C"
+  data$HD01_VD09[1] <- "2+ Races Non-Hispanic C"
+  data$HD02_VD09[1] <- "2+ Races Non-Hispanic Error C"
+  data$HD01_VD12[1] <- "Hispanic or Latino C"
+  data$HD02_VD12[1] <- "Hispanic or Latino Error C"
+  data
+}
+
+#Removes extraneous information and edits headers in the file for Hispanic/Latino country of origin
+parse.origin.vert <- function(data) {
+  data <- data[,-c(1:9,16:17,20:33,36:65)]
+  data$HD01_VD04[1] <- "Mexican C"
+  data$HD02_VD04[1] <- "Mexican Error C"
+  data$HD01_VD05[1] <- "Puerto Rican C"
+  data$HD02_VD05[1] <- "Puerto Rican Error C"
+  data$HD01_VD06[1] <- "Cuban C"
+  data$HD02_VD06[1] <- "Cuban Error C"
+  data$HD01_VD08[1] <- "Central American C"
+  data$HD02_VD08[1] <- "Central American Error C"
+  data$HD01_VD16[1] <- "South American C"
+  data$HD02_VD16[1] <- "South American Error C"
+  data
+}
+
+#Removes extraneous information and edits headers in a per capita income file for a given race
+parse.pci.vert <- function(data, race) {
+  data <- data[,-c(1:3)]
+  data$HD01_VD01[1] <- paste(race, "per capita income")
+  data$HD02_VD01[1] <- paste(race, "per capita income error")
+  data
+}
+
+#Aggregates useful age and gender categories for a particular race file passed in
+parse.age.sex.vert <- function (race_data, race) {
+  cleaned.data <- data.frame(race_data$GEO.display.label)
+  cleaned.data$total <- race_data$HD01_VD01
+  cleaned.data$total[1] <- paste(race, "Total", "C")
+  cleaned.data$total.error <- race_data$HD02_VD01
+  cleaned.data$total.error[1] <- paste(race, "Total", "Error C")
+  cleaned.data$male <- race_data$HD01_VD02
+  cleaned.data$male[1] <- paste(race, "Male", "C")
+  cleaned.data$male.error <- race_data$HD02_VD02
+  cleaned.data$male.error[1] <- paste(race, "Male", "Error C")
+  cleaned.data$female <- race_data$HD01_VD17
+  cleaned.data$female[1] <- paste(race, " Female", "C")
+  cleaned.data$female.error <- race_data$HD02_VD17
+  cleaned.data$female.error[1] <- paste(race, "Female", "Error C")
+  cleaned.data$eighteen.twentynine <- as.numeric(race_data$HD01_VD07) + as.numeric(race_data$HD01_VD08) + as.numeric(race_data$HD01_VD09) + as.numeric(race_data$HD01_VD22) + as.numeric(race_data$HD01_VD23) + as.numeric(race_data$HD01_VD24)
+  cleaned.data$eighteen.twentynine[1] <- paste(race, "18-29", "C")
+  cleaned.data$eighteen.twentynine.error <- round(sqrt((as.numeric(race_data$HD02_VD07))^2 + (as.numeric(race_data$HD02_VD08))^2 + (as.numeric(race_data$HD02_VD09))^2 + (as.numeric(race_data$HD02_VD22))^2 + (as.numeric(race_data$HD02_VD23))^2 + (as.numeric(race_data$HD02_VD24))^2)) 
+  cleaned.data$eighteen.twentynine.error[1] <- paste(race, "18-29", "Error C")
+  cleaned.data$thirty.fortyfour <- as.numeric(race_data$HD01_VD10) + as.numeric(race_data$HD01_VD11) + as.numeric(race_data$HD01_VD25) + as.numeric(race_data$HD01_VD26)
+  cleaned.data$thirty.fortyfour[1] <- paste(race, "30-44", "C")
+  cleaned.data$thirty.fortyfour.error <- round(sqrt((as.numeric(race_data$HD02_VD10))^2 + (as.numeric(race_data$HD02_VD11))^2 + (as.numeric(race_data$HD02_VD25))^2 + (as.numeric(race_data$HD02_VD26))^2))
+  cleaned.data$thirty.fortyfour.error[1] <- paste(race, "30-44", "Error C")
+  cleaned.data$fortyfive.sixtyfour <- as.numeric(race_data$HD01_VD12) + as.numeric(race_data$HD01_VD13) + as.numeric(race_data$HD01_VD27) + as.numeric(race_data$HD01_VD28)
+  cleaned.data$fortyfive.sixtyfour[1] <- paste(race, "45-64", "C")
+  cleaned.data$fortyfive.sixtyfour.error <- round(sqrt((as.numeric(race_data$HD02_VD12))^2 + (as.numeric(race_data$HD02_VD13))^2 + (as.numeric(race_data$HD02_VD27))^2 + (as.numeric(race_data$HD02_VD28))^2))
+  cleaned.data$fortyfive.sixtyfour.error[1] <- paste(race, "45-64", "Error C")
+  ### Combine 30-45 and 45-64
+  cleaned.data$middle.age <- as.numeric(cleaned.data$thirty.fortyfour) + as.numeric(cleaned.data$fortyfive.sixtyfour)
+  cleaned.data$middle.age[1] <- paste(race, "30-64 ", "C")
+  cleaned.data$middle.age.error <- round(sqrt((as.numeric(cleaned.data$thirty.fortyfour.error))^2 + (as.numeric(cleaned.data$fortyfive.sixtyfour))^2))
+  cleaned.data$middle.age.error[1] <- paste(race, "30-64 ", "Error C")
+  ### EDIT: If you would like to keep the 30-44 and 45-65 age ranges, not just the broader middle age category, comment the following line out:
+  cleaned.data <- cleaned.data[,-10:-13]
+  ###
+  cleaned.data$senior <- as.numeric(race_data$HD01_VD14) + as.numeric(race_data$HD01_VD15) + as.numeric(race_data$HD01_VD16) + as.numeric(race_data$HD01_VD29) + as.numeric(race_data$HD01_VD30) + as.numeric(race_data$HD01_VD31)
+  cleaned.data$senior[1] <- paste(race, "65+", "C")
+  cleaned.data$senior.error <- round(sqrt((as.numeric(race_data$HD02_VD14))^2 + (as.numeric(race_data$HD02_VD15))^2 + (as.numeric(race_data$HD02_VD16))^2 + (as.numeric(race_data$HD02_VD29))^2 + (as.numeric(race_data$HD02_VD30))^2 + (as.numeric(race_data$HD02_VD31))^2))
+  cleaned.data$senior.error[1] <- paste(race, "65+", "Error C")
+  cleaned.data <- cleaned.data[,-1]
+  cleaned.data
+}
+
+parse.citizen.vert <- function(data, race) {
+  cleaned.data <- data.frame(data$GEO.display.label)
+  cleaned.data$noncitizens <- as.numeric(data$HD01_VD07) + as.numeric(data$HD01_VD12) + as.numeric(data$HD01_VD18) + as.numeric(data$HD01_VD23)
+  cleaned.data$noncitizens[1] <- paste(race, "Noncitizens")
+  cleaned.data$noncitizens.error <- round(sqrt((as.numeric(data$HD02_VD07))^2 + (as.numeric(data$HD02_VD12))^2 + (as.numeric(data$HD02_VD18))^2 + (as.numeric(data$HD02_VD23))^2))
+  cleaned.data$noncitizens.error[1] <- paste(race, "Noncitizens Error")
+  cleaned.data$citizens <- as.numeric(data$HD01_VD01) - as.numeric(cleaned.data$noncitizens)
+  cleaned.data$citizens[1] <- paste(race, "Citizens")
+  cleaned.data$citizens.error <- round(sqrt((as.numeric(cleaned.data$noncitizens.error))^2 + (as.numeric(data$HD02_VD01))^2))
+  cleaned.data$citizens.error[1] <- paste(race, "Citizens Error")
+  cleaned.data <- cleaned.data[,-1]
+  cleaned.data
+}
+
+# Merges the datasets
+cbind.fill<-function(...) {
+  nm <- list(...) 
+  nm<-lapply(nm, as.matrix)
+  n <- max(sapply(nm, nrow)) 
+  as.data.frame(do.call(cbind, lapply(nm, function (x) 
+    rbind(x, matrix(, n-nrow(x), ncol(x))))))
+}
+
+# Parse race and origin files
+origin.parsed <- parse.origin.vert(origin)
+race.parsed <- parse.race.vert(race)
+
+# Parse per capita income, race by age, and citizenship  -- but *ONLY* for White Non-Hispanic files and Hispanic/Latino files
+# Other race files for these variables, ex for Blacks, do not have Hispanics filtered out
+# Because of this, the ACS data for other races will not match up appropriately with voter registration data
+# If you have voter registration data that does not separate out Hispanics/Latinos from all other races, uncomment the relevant lines of code
+# Note: for simplicity would like to store these all in a list to feed into cbind.fill(), ran into issues though
+
+pci.all.parsed <- parse.pci.vert(pci.all, "All Races")
+#pci.black.parsed <- parse.pci.vert(pci.black, "Black")
+#pci.amind.parsed <- parse.pci.vert(pci.amind, "AmInd")
+#pci.asian.parsed <- parse.pci.vert(pci.asian, "Asian")
+#pci.nhpi.parsed <- parse.pci.vert(pci.nhpi, "NHPI")
+#pci.other.parsed <- parse.pci.vert(pci.other, "Other Race")
+#pci.two_plus.parsed <- parse.pci.vert(pci.two_plus, "2+ Races")
+pci.white_nonhis.parsed <- parse.pci.vert(pci.white_nonhis, "White Non-Hispanic")
+pci.hispanic.parsed <- parse.pci.vert(pci.hispanic, "Hispanic or Latino")
+
+age.all.parsed <- parse.age.sex.vert(age.all, "All Races")
+#age.black.parsed <- parse.age.sex.vertl(age.black, "Black")
+#age.amind.parsed <- parse.age.sex.vert(age.amind, "AmInd")
+#age.asian.parsed <- parse.age.sex.vert(age.asian, "Asian")
+#age.nhpi.parsed <- parse.age.sex.vert(age.nhpi, "NHPI")
+#age.other.parsed <- parse.age.sex.vert(age.other, "Other Race")
+#age.two_plus.parsed <- parse.age.sex.vert(age.two_plus, "2+ Races")
+age.white_nonhis.parsed <- parse.age.sex.vert(age.white_nonhis, "White Non-Hispanic")
+age.hispanic.parsed <- parse.age.sex.vert(age.hispanic, "Hispanic or Latino")
+
+citizen.all.parsed <- parse.citizen.vert(citizen.all, "All Races")
+#citizen.black.parsed <- parse.citizen.vert(citizen.black, "Black")
+#citizen.amind.parsed <- parse.citizen.vert(citizen.amind, "AmInd")
+#citizen.asian.parsed <- parse.citizen.vert(citizen.asian, "Asian")
+#citizen.nhpi.parsed <- parse.citizen.vert(citizen.nhpi, "NHPI")
+#citizen.other.parsed <- parse.citizen.vert(citizen.other, "Other Race")
+#citizen.two_plus.parsed <- parse.citizen.vert(citizen.two_plus, "2+ Races")
+citizen.white_nonhis.parsed <- parse.citizen.vert(citizen.white_nonhis, "White Non-Hispanic")
+citizen.hispanic.parsed <- parse.citizen.vert(citizen.hispanic, "Hispanic")
+
+
+# Combine selected data for all races, removing county column for all but the first dataset
+all.data = cbind.fill(geography, race.parsed, origin.parsed, pci.all.parsed, pci.white_nonhis.parsed, pci.hispanic.parsed, age.all.parsed, age.white_nonhis.parsed, age.hispanic.parsed, citizen.all.parsed, citizen.white_nonhis.parsed, citizen.hispanic.parsed)
+
+# Write CSV
+# EDIT HERE: Change to your desired filename, ex. by inserting the correct year.
+write.csv(all.data, file = "census.data.2016.csv")
