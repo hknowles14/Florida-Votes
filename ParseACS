@@ -212,5 +212,5 @@ citizen.hispanic.parsed <- parse.citizen.vert(citizen.hispanic, "Hispanic")
 
 all.data = cbind.fill(geography, race.parsed, origin.parsed, pci.all.parsed, pci.white_nonhis.parsed, pci.hispanic.parsed, age.all.parsed, age.white_nonhis.parsed, age.hispanic.parsed, citizen.all.parsed, citizen.white_nonhis.parsed, citizen.hispanic.parsed)
 
-# Change to your desired filename, ex. by inserting the correct year.
+# Specify name for output file
 write.csv(all.data, file = "census.data.2016.csv")
